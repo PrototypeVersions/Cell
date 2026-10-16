@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cell: an interactive 3D explanation</title>
+  <meta name="description" content="A 3D eukaryotic cell you can rotate, open, and click, paired with an exam-style question whose explanation plays out inside the cell.">
+  <meta name="author" content="Blake A. Myers">
+  <meta property="og:title" content="Cell: an interactive 3D explanation">
+  <meta property="og:description" content="Rotate, open, and click a 3D cell. Then answer a question and watch the explanation happen inside it.">
+  <meta property="og:image" content="assets/preview.png">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    { "imports": {
+        "three": "./vendor/three/build/three.module.min.js",
+        "three/addons/": "./vendor/three/addons/"
+    } }
+  </script>
+</head>
+<body>
+  <main class="app">
+    <section class="stage" id="stage" aria-label="3D cell viewer">
+      <canvas id="gl" aria-label="Interactive 3D model of a eukaryotic cell. Use the list in the side panel to select structures with the keyboard."></canvas>
+      <div class="labels" id="labels" aria-hidden="true"></div>
+      <div class="tooltip" id="tooltip" aria-hidden="true"></div>
+
+      <header class="masthead">
+        <h1>Cell</h1>
+        <p>A 3D cell that teaches. Rotate it, open it, click anything.</p>
+      </header>
+
+      <div class="viewbar" role="toolbar" aria-label="View controls">
+        <label class="cut">
+          <span>Cutaway</span>
+          <input type="range" id="cut" min="0" max="65" value="54" aria-label="Cutaway opening">
+        </label>
+        <button type="button" id="labelsBtn" aria-pressed="false">Labels</button>
+        <button type="button" id="spinBtn" aria-pressed="true">Rotate</button>
+        <button type="button" id="resetBtn">Reset view</button>
+      </div>
+
+      <p class="hint" id="hint">Drag to turn the cell. Scroll or pinch to zoom.</p>
+      <div class="loading" id="loading">Building the cell…</div>
+    </section>
+
+    <aside class="panel" aria-label="Lessons">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" id="t-explore" aria-controls="p-explore" aria-selected="true">Explore</button>
+        <button type="button" role="tab" id="t-question" aria-controls="p-question" aria-selected="false">Question</button>
+        <button type="button" role="tab" id="t-spot" aria-controls="p-spot" aria-selected="false">Spot it</button>
+      </div>
+
+      <!-- Explore -->
+      <section class="pane" role="tabpanel" id="p-explore" aria-labelledby="t-explore">
+        <div id="exploreDetail" class="detail" hidden>
+          <h2 id="dName"></h2>
+          <p id="dRole" class="role"></p>
+          <h3>Tested facts</h3>
+          <ul id="dFacts" class="facts"></ul>
+        </div>
+        <div id="exploreIntro" class="intro">
+          <h2>Every structure is clickable</h2>
+          <p>This cell is built entirely in code, so each organelle is a real object, not part of a flat picture. Select one in the model or from the list to see what it does and what exams ask about it.</p>
+        </div>
+        <h3 class="listhead">Structures</h3>
+        <ul class="organelle-list" id="organelleList"></ul>
+      </section>
+
+      <!-- Question -->
+      <section class="pane" role="tabpanel" id="p-question" aria-labelledby="t-question" hidden>
+        <p class="item-meta">Item 1 of 1, biochemistry</p>
+        <div class="stem" id="stem"></div>
+        <p class="prompt" id="qPrompt"></p>
+        <form id="choices" class="choices"></form>
+        <button type="button" class="primary" id="submitBtn" disabled>Submit answer</button>
+
+        <div id="result" class="result" hidden></div>
+
+        <div id="explain" class="explain" hidden>
+          <div class="player" aria-label="Animated explanation">
+            <div class="player-head">
+              <h3>Watch it happen</h3>
+              <div class="seg" role="radiogroup" aria-label="Pathway">
+                <button type="button" role="radio" data-mode="normal" aria-checked="true">Normal</button>
+                <button type="button" role="radio" data-mode="disease" aria-checked="false">I-cell disease</button>
+              </div>
+            </div>
+            <ol class="steps" id="steps"></ol>
+            <div class="caption" id="caption" aria-live="polite">
+              <p class="cap-title" id="capTitle"></p>
+              <p class="cap-body" id="capBody"></p>
+            </div>
+            <div class="transport">
+              <button type="button" id="prevBtn" aria-label="Previous step">Back</button>
+              <button type="button" id="playBtn" class="primary small">Pause</button>
+              <button type="button" id="nextBtn" aria-label="Next step">Next</button>
+            </div>
+          </div>
+          <div class="explain-text" id="explainText"></div>
+          <h3>Why the other choices are wrong</h3>
+          <dl class="whynot" id="whyNot"></dl>
+          <div class="objective">
+            <h3>Educational objective</h3>
+            <p id="objective"></p>
+          </div>
+          <button type="button" class="ghost" id="retryBtn">Try the question again</button>
+        </div>
+      </section>
+
+      <!-- Spot it -->
+      <section class="pane" role="tabpanel" id="p-spot" aria-labelledby="t-spot" hidden>
+        <p class="item-meta" id="spotMeta"></p>
+        <p class="spot-prompt" id="spotPrompt"></p>
+        <p class="spot-instr" id="spotInstr">Click the structure in the cell. Zoom in if you need to.</p>
+        <div class="spot-feedback" id="spotFeedback" hidden></div>
+        <button type="button" class="primary" id="spotNext" hidden>Next prompt</button>
+      </section>
+
+      <footer class="credit">
+        Built by <a href="https://sites.google.com/view/blake-a-myers/home">Blake A. Myers</a>. Every shape is generated in code with three.js. <a href="https://github.com/PrototypeVersions/cell">Source</a>
+      </footer>
+    </aside>
+  </main>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
