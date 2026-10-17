@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildCell, PALETTE } from './cell.js';
-import { createPipeline } from './render.js';
-import { Pathway } from './pathway.js';
-import { ORGANELLES, QUESTION, SPOT_IT } from './content.js';
+import { buildCell, PALETTE } from './cell.js?v=5';
+import { createPipeline } from './render.js?v=5';
+import { Pathway } from './pathway.js?v=5';
+import { ORGANELLES, QUESTION, SPOT_IT } from './content.js?v=5';
 
 const $ = (id) => document.getElementById(id);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

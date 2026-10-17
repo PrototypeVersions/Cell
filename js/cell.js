@@ -311,8 +311,10 @@ export function buildCell({ lowPower = false } = {}) {
       m.compose(d.clone().multiplyScalar(rr + 0.11 * len - 0.03), q, s);
       mesh.setMatrixAt(i, m);
     });
-    const top = v3(0.4, 0, 0.5).normalize(); top.y = 1; top.normalize();
-    register('microvilli', mesh, top.multiplyScalar(membraneRadius(top) + 0.3));
+    // Anchor on microvilli across the top from the cutaway, which stay visible.
+    const az = cellWedge.phi0 + Math.PI * 0.8;
+    const top = v3(Math.cos(az) * 0.4, 0.92, Math.sin(az) * 0.4).normalize();
+    register('microvilli', mesh, top.multiplyScalar(membraneRadius(top) + 0.32));
   }
 
   // ---------------- nucleus: double envelope, pores, nucleolus
@@ -683,11 +685,12 @@ export function buildCell({ lowPower = false } = {}) {
     const actin = new THREE.Mesh(mergeGeometries(act), material(PALETTE.actin, { roughness: 0.6, ...clipCell }));
     const actinProxy = new THREE.Mesh(mergeGeometries(actProxy), new THREE.MeshBasicMaterial({ visible: false, ...clipCell }));
     const ag = new THREE.Group(); ag.add(actin, actinProxy);
-    const actAnchor = v3(Math.cos(cellWedge.phi0 + 0.95), -0.25, Math.sin(cellWedge.phi0 + 0.95)).normalize();
+    const actAnchor = v3(Math.cos(cellWedge.phi0 + 1.45), -0.25, Math.sin(cellWedge.phi0 + 1.45)).normalize();
     register('actin', ag, actAnchor.multiplyScalar(membraneRadius(actAnchor) * 0.95));
 
     // Intermediate filaments: long ropes from the nucleus to the periphery.
     const ifs = [], ifProxy = [];
+    let ifAnchor = null;
     for (let k = 0; k < 7; k++) {
       const d = randomUnit(r);
       const start = NUC_CENTER.clone().addScaledVector(d, outerN(d) + 0.05);
@@ -696,12 +699,13 @@ export function buildCell({ lowPower = false } = {}) {
       const m1 = start.clone().lerp(end, 0.33).add(randomUnit(r).multiplyScalar(0.3));
       const m2 = start.clone().lerp(end, 0.66).add(randomUnit(r).multiplyScalar(0.3));
       ifs.push(tube([start, m1, m2, end], 0.017, 80, 6));
+      if (!ifAnchor && m2.x > 0 && m2.z > 0) ifAnchor = m2.clone();
       ifProxy.push(tube([start, m1, m2, end], 0.07, 40, 5));
     }
     const ifMesh = new THREE.Mesh(mergeGeometries(ifs), material(PALETTE.intermediate, { roughness: 0.65, ...clipCell }));
     const ifP = new THREE.Mesh(mergeGeometries(ifProxy), new THREE.MeshBasicMaterial({ visible: false, ...clipCell }));
     const ig = new THREE.Group(); ig.add(ifMesh, ifP);
-    register('intermediate', ig, v3(-0.4, -1.2, 1.6));
+    register('intermediate', ig, ifAnchor || v3(-0.4, -1.2, 1.6));
   }
 
   // ---------------- free ribosomes scattered in the cytosol
