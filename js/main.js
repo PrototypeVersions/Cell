@@ -14,11 +14,15 @@ const DEG = Math.PI / 180;
 const canvas = $('gl');
 const stage = $('stage');
 const lowPower = window.matchMedia('(pointer: coarse)').matches || Math.min(screen.width, screen.height) < 700;
-const pixelRatio = Math.min(window.devicePixelRatio, lowPower ? 1.5 : 2);
+let pixelRatio = Math.min(window.devicePixelRatio, lowPower ? 1.25 : 1.5);
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(pixelRatio);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// The cell is static, so shadows are recomputed only when something in it changes.
+renderer.shadowMap.autoUpdate = false;
+renderer.shadowMap.needsUpdate = true;
+const refreshShadows = () => { renderer.shadowMap.needsUpdate = true; };
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.NeutralToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -93,7 +97,7 @@ function resize() {
   pipeline.setSize(w, h, pixelRatio);
   camera.aspect = w / h;
   // Pull back a little on narrow viewports so the whole cell fits.
-  camera.fov = w / h < 0.9 ? 42 : 32;
+  camera.fov = w / h < 0.9 ? 47 : 32;
   camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(stage);
@@ -261,7 +265,7 @@ controls.addEventListener('start', () => {
 // ---------------------------------------------------------------- view bar
 const cutInput = $('cut');
 let cutAnim = null;
-cutInput.addEventListener('input', () => { cutAnim = null; cell.setCutaway(Number(cutInput.value) * DEG); });
+cutInput.addEventListener('input', () => { cutAnim = null; cell.setCutaway(Number(cutInput.value) * DEG); refreshShadows(); });
 $('labelsBtn').addEventListener('click', (e) => {
   labelsOn = !labelsOn;
   e.currentTarget.setAttribute('aria-pressed', String(labelsOn));
@@ -283,6 +287,7 @@ function stepCut(dt) {
   const v = cutAnim.from + (cutAnim.to - cutAnim.from) * e;
   cutInput.value = v;
   cell.setCutaway(v * DEG);
+  refreshShadows();
   if (cutAnim.t >= 1) cutAnim = null;
 }
 
@@ -473,6 +478,7 @@ $('prevBtn').addEventListener('click', () => pathway.go(pathway.index - 1));
 $('nextBtn').addEventListener('click', () => pathway.go(pathway.index + 1));
 
 const pathway = new Pathway({ scene, cell, labels, onStep: onPathStep });
+pathway.onApply = refreshShadows;
 
 // ---------------------------------------------------------------- spot it
 let spotIndex = 0, spotScore = 0, spotTried = false, spotSolved = false;
@@ -525,6 +531,27 @@ $('spotNext').addEventListener('click', () => {
   showSpot();
 });
 
+// ---------------------------------------------------------------- adaptive quality
+// Steps detail down until the frame rate is smooth: resolution first, then AO cost.
+let qualityLevel = 0, qTime = 0, qFrames = 0, qSettle = 2;
+function applyQuality() {
+  if (qualityLevel === 1) { pixelRatio = Math.min(pixelRatio, 1.25); pipeline.ao.updateGtaoMaterial({ samples: 8 }); pipeline.ao.updatePdMaterial({ samples: 8 }); }
+  if (qualityLevel === 2) pixelRatio = 1;
+  if (qualityLevel === 3) pipeline.ao.enabled = false;
+  renderer.setPixelRatio(pixelRatio);
+  resize();
+}
+function governQuality(dt) {
+  if (qualityLevel >= 3 || document.hidden) return;
+  if (qSettle > 0) { qSettle -= dt; return; }
+  qTime += dt; qFrames++;
+  if (qTime < 1.5) return;
+  const fps = qFrames / qTime;
+  qTime = 0; qFrames = 0;
+  if (fps < 42) { qualityLevel++; applyQuality(); qSettle = 1; }
+}
+window.__quality = () => ({ qualityLevel, pixelRatio });
+
 // ---------------------------------------------------------------- loop
 const clock = new THREE.Clock();
 function frame() {
@@ -532,6 +559,8 @@ function frame() {
   stepFlight(dt);
   stepCut(dt);
   pathway.update(dt);
+  if (pathway.active && pathway.playing) refreshShadows();
+  governQuality(dt);
   if (pathway.active && pathway.playing === false) updatePlayButton();
   controls.update(dt);
   processHover();

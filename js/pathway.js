@@ -244,6 +244,7 @@ export class Pathway {
     });
 
     this.labels.setPathLabel(S.label);
+    this.onApply?.();
   }
 
   go(index, { play = true } = {}) {
