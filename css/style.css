@@ -107,6 +107,8 @@ a { color: var(--hema); text-underline-offset: 2px; }
 .lbl.path { background: var(--ink); color: #fff; border-color: var(--ink); font-size: 13px; }
 .lbl.tag { background: #c2257a; color: #fff; border-color: #c2257a; font-size: 13px; }
 .lbl.fail { background: var(--eosin); color: #fff; border-color: var(--eosin); font-size: 13px; }
+.lbl.sel { background: var(--hema); color: #fff; border-color: var(--hema); font-size: 13.5px; font-weight: 600; z-index: 2; }
+.lbl.sel::after { background: var(--hema); }
 .lbl.hidden { opacity: 0; }
 
 .tooltip {
@@ -282,3 +284,8 @@ a { color: var(--hema); text-underline-offset: 2px; }
   padding: 6px 8px; border-radius: 6px; font-size: 14px; color: var(--ink-2);
 }
 .spot-list button:hover { background: var(--slide); color: var(--ink); }
+
+.reveal-btn[hidden] { display: none; }
+.reveal-btn { display: block; margin-top: 14px; padding: 7px 14px; font-size: 14px; }
+.spot-feedback.reveal { background: var(--hema-soft); }
+.spot-feedback.reveal strong { color: var(--hema-deep); }

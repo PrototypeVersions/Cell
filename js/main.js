@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildCell, PALETTE } from './cell.js?v=8';
-import { createPipeline } from './render.js?v=8';
-import { Pathway } from './pathway.js?v=8';
-import { ORGANELLES, QUESTION, SPOT_IT } from './content.js?v=8';
+import { buildCell, PALETTE } from './cell.js?v=10';
+import { createPipeline } from './render.js?v=10';
+import { Pathway } from './pathway.js?v=10';
+import { ORGANELLES, QUESTION, SPOT_IT } from './content.js?v=10';
 
 const $ = (id) => document.getElementById(id);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -173,11 +173,16 @@ function placeLabel(el, pos) {
 }
 function updateLabels() {
   const show = labelsOn && !pathway.active;
+  // In Explore, the selected structure always shows its label and wins any overlap.
+  const pinned = pathway.active ? null : mode === 'explore' ? selected : mode === 'spot' ? spotShowKey : null;
+  const order = pinned ? [...allLabels].sort((a, b) => (b.key === pinned) - (a.key === pinned)) : allLabels;
   const placed = [];
-  for (const l of allLabels) {
-    if (!show) { l.el.classList.add('hidden'); continue; }
+  for (const l of order) {
+    const isPinned = l.key === pinned;
+    l.el.classList.toggle('sel', isPinned);
+    if (!show && !isPinned) { l.el.classList.add('hidden'); continue; }
     const p = placeLabel(l.el, l.pos);
-    if (!l.w) l.w = l.el.offsetWidth || 90;
+    if (!l.w || isPinned) l.w = l.el.offsetWidth || 90;
     // Greedy declutter: skip a label that would overlap one already shown.
     const box = p && { l: p.x - l.w / 2 - 4, r: p.x + l.w / 2 + 4, t: p.y - 26, b: p.y + 2 };
     const clash = !box || placed.some((q) => box.l < q.r && box.r > q.l && box.t < q.b && box.b > q.t);
@@ -433,6 +438,8 @@ function resetQuestion() {
   $('submitBtn').hidden = false;
   $('submitBtn').disabled = true;
   panes.question.scrollTop = 0;
+  // On phones the page itself scrolls; the panel starts right under the pinned 3D view.
+  if (window.matchMedia('(max-width: 900px)').matches) window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
   flyTo(HOME, 1.2);
 }
 
@@ -493,18 +500,19 @@ const pathway = new Pathway({ scene, cell, labels, onStep: onPathStep });
 pathway.onApply = refreshShadows;
 
 // ---------------------------------------------------------------- spot it
-let spotIndex = 0, spotScore = 0, spotTried = false, spotSolved = false;
+let spotIndex = 0, spotScore = 0, spotTried = false, spotSolved = false, spotShowKey = null;
 function startSpot() {
   spotIndex = 0; spotScore = 0;
   showSpot();
 }
 function showSpot() {
-  spotTried = false; spotSolved = false;
+  spotTried = false; spotSolved = false; spotShowKey = null;
   highlight(null);
   const fb = $('spotFeedback');
   fb.hidden = true;
   $('spotNext').hidden = true;
   $('spotInstr').hidden = false;
+  $('spotReveal').hidden = spotIndex >= SPOT_IT.length;
   $('spotAlt').hidden = spotIndex >= SPOT_IT.length;
   if (spotIndex >= SPOT_IT.length) {
     $('spotMeta').textContent = 'Done';
@@ -532,6 +540,9 @@ function answerSpot(k) {
   if (k === item.answer) {
     if (!spotTried) spotScore++;
     spotSolved = true;
+    spotShowKey = k;
+    $('spotReveal').hidden = true;
+    $('spotAlt').hidden = true;
     highlight(k, 'ok');
     fb.className = 'spot-feedback ok';
     fb.innerHTML = `<strong>Yes, the ${ORGANELLES[k].name.toLowerCase()}.</strong>${item.feedback}`;
@@ -544,10 +555,30 @@ function answerSpot(k) {
     fb.innerHTML = `<strong>That is the ${ORGANELLES[k].name.toLowerCase()}.</strong>Try another structure.`;
   }
 }
+// Reveal: shows and labels the answer, flies to it, and scores the prompt as missed.
+$('spotReveal').addEventListener('click', () => {
+  if (spotSolved || spotIndex >= SPOT_IT.length) return;
+  const item = SPOT_IT[spotIndex];
+  spotSolved = true;
+  spotTried = true;
+  spotShowKey = item.answer;
+  highlight(item.answer, 'ok');
+  focusOn(item.answer);
+  const fb = $('spotFeedback');
+  fb.hidden = false;
+  fb.className = 'spot-feedback reveal';
+  fb.innerHTML = `<strong>The answer is the ${ORGANELLES[item.answer].name.toLowerCase()}.</strong>${item.feedback}`;
+  $('spotReveal').hidden = true;
+  $('spotAlt').hidden = true;
+  $('spotInstr').hidden = true;
+  $('spotNext').hidden = false;
+});
 $('spotNext').addEventListener('click', () => {
-  if (spotIndex >= SPOT_IT.length) { startSpot(); return; }
-  spotIndex++;
-  showSpot();
+  if (spotIndex >= SPOT_IT.length) startSpot();
+  else { spotIndex++; showSpot(); }
+  // On phones the page itself scrolls; bring the new prompt back into view.
+  if (window.matchMedia('(max-width: 900px)').matches) window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  else panes.spot.scrollTop = 0;
 });
 
 // ---------------------------------------------------------------- adaptive quality
