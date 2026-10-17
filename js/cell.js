@@ -425,7 +425,7 @@ export function buildCell({ lowPower = false } = {}) {
     }
     const rerMat = material(PALETTE.rer, { side: THREE.DoubleSide, roughness: 0.45 });
     const rer = new THREE.Mesh(mergeGeometries(sheets), rerMat);
-    const ribo = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.026, 0),
+    const ribo = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.024, lowPower ? 0 : 1),
       material(PALETTE.ribosome, { roughness: 0.35 }), ribosomePts.length);
     const m = new THREE.Matrix4();
     ribosomePts.forEach((p, i) => { m.makeTranslation(p.x, p.y, p.z); ribo.setMatrixAt(i, m); });
@@ -551,9 +551,11 @@ export function buildCell({ lowPower = false } = {}) {
       const count = Math.round(len / 0.12);
       for (let c = 0; c < count; c++) {
         const y = -len / 2 + (c + 0.5) * (len / count);
-        const g = new THREE.CylinderGeometry(rad * 0.72, rad * 0.72, 0.035, 24);
+        // lens-shaped shelves with rounded rims, alternating from opposite walls
+        const g = new THREE.SphereGeometry(rad * 0.74, 28, 12);
+        g.scale(1, 0.075, 0.92);
         const side = c % 2 === 0 ? 1 : -1;
-        g.translate(side * rad * 0.28, y, 0);
+        g.translate(side * rad * 0.26, y, 0);
         one.add(new THREE.Mesh(g, crMat));
       }
       one.children.forEach((ch) => { ch.geometry.applyQuaternion(q); ch.geometry.translate(pos.x, pos.y, pos.z); });
