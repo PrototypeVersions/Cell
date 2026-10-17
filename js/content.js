@@ -50,7 +50,7 @@ export const ORGANELLES = {
     name: 'Free ribosomes',
     role: 'Translate proteins that stay in the cytosol or go to peroxisomes, the nucleus, or mitochondria (nuclear-encoded).',
     facts: [
-      'Eukaryotic ribosomes are 80S (60S + 40S); bacterial ribosomes are 70S (50S + 30S).',
+      'Eukaryotic cytoplasmic ribosomes are 80S (60S + 40S); bacterial ribosomes are 70S (50S + 30S). Mitochondria have their own smaller ribosomes (55S in mammals).',
       'That difference lets aminoglycosides, tetracyclines, and macrolides target bacteria selectively.',
     ],
   },
@@ -70,7 +70,7 @@ export const ORGANELLES = {
     role: 'Receives proteins from the ER at its cis face, modifies and sorts them, and ships them from its trans face.',
     facts: [
       'Modifies N-linked oligosaccharides, adds O-linked sugars to serine and threonine, and sulfates proteoglycans.',
-      'Tags lysosomal enzymes with mannose-6-phosphate; failure of that tag causes I-cell disease.',
+      'Tags most lysosomal enzymes with mannose-6-phosphate; failure of that tag causes I-cell disease.',
     ],
   },
   vesicle: {
@@ -79,13 +79,13 @@ export const ORGANELLES = {
     role: 'Membrane bubbles that carry cargo between compartments.',
     facts: [
       'COPII coats carry cargo forward from ER to Golgi; COPI coats carry it back from Golgi to ER.',
-      'Clathrin coats carry cargo from the trans-Golgi to lysosomes and from the plasma membrane into endosomes.',
+      'Clathrin coats carry cargo from the trans-Golgi toward lysosomes (by way of endosomes) and from the plasma membrane into endosomes.',
     ],
   },
   mitochondrion: {
     short: 'Mitochondrion',
     name: 'Mitochondria',
-    role: 'Run the TCA cycle, fatty acid β-oxidation, and oxidative phosphorylation on the folded inner membrane (cristae).',
+    role: 'Make most of the cell’s ATP. The TCA cycle and fatty acid β-oxidation run in the matrix; the electron transport chain and ATP synthase sit on the folded inner membrane (cristae).',
     facts: [
       'Have their own circular DNA, inherited only from the mother.',
       'Heteroplasmy (a mix of normal and mutant mtDNA) explains variable severity, as in MELAS.',
@@ -97,8 +97,17 @@ export const ORGANELLES = {
     name: 'Lysosomes',
     role: 'Acidic sacs of hydrolases that break down macromolecules, worn-out organelles (autophagy), and engulfed material.',
     facts: [
-      'Lysosomal storage diseases each lack one hydrolase: Tay-Sachs (hexosaminidase A), Gaucher (glucocerebrosidase), Fabry (α-galactosidase A).',
-      'Hydrolases reach the lysosome only if the Golgi has tagged them with mannose-6-phosphate.',
+      'Many lysosomal storage diseases result from loss of a single hydrolase: Tay-Sachs (hexosaminidase A), Gaucher (glucocerebrosidase), Fabry (α-galactosidase A). Others stem from targeting or transport defects, such as I-cell disease.',
+      'Most soluble hydrolases reach the lysosome only if the Golgi has tagged them with mannose-6-phosphate. A few, such as glucocerebrosidase (carried by LIMP-2), are routed another way.',
+    ],
+  },
+  endosome: {
+    short: 'Endosome',
+    name: 'Endosomes',
+    role: 'Sorting stations between the cell surface, the Golgi, and lysosomes. Early endosomes mature into late endosomes, which deliver their contents to lysosomes.',
+    facts: [
+      'Lysosomal enzymes from the Golgi arrive at late endosomes, where the acidic pH releases them from mannose-6-phosphate receptors; the receptors recycle to the Golgi.',
+      'Endocytosed cargo, such as LDL taken up by receptor-mediated endocytosis, passes through endosomes on its way to lysosomes.',
     ],
   },
   peroxisome: {
@@ -163,9 +172,9 @@ export const QUESTION = {
   ],
   answer: 'A',
   explanation: [
-    'This child has <b>I-cell disease</b> (mucolipidosis type II), an autosomal recessive disorder caused by deficiency of <b>N-acetylglucosamine-1-phosphotransferase</b> (encoded by <i>GNPTAB</i>).',
-    'Lysosomal hydrolases are made on the rough ER and travel to the <b>cis-Golgi</b>, where this enzyme starts the mannose-6-phosphate (M6P) tag. In the <b>trans-Golgi</b>, M6P receptors capture tagged enzymes and send them to lysosomes.',
-    'Without the tag, the hydrolases follow the default secretory pathway and leave the cell, which explains the <b>high plasma enzyme levels</b>. Lysosomes, now empty of working enzymes, fill with undigested material and appear as the <b>inclusions</b> that give the disease its name.',
+    'This child has <b>I-cell disease</b> (mucolipidosis type II), an autosomal recessive disorder caused by deficient <b>N-acetylglucosamine-1-phosphotransferase</b>, from mutations in <i>GNPTAB</i>, which encodes the enzyme’s α and β subunits.',
+    'Lysosomal hydrolases are made on the rough ER and travel to the <b>cis-Golgi</b>, where this enzyme begins building the mannose-6-phosphate (M6P) tag. In the <b>trans-Golgi</b>, M6P receptors capture tagged enzymes and send them, by way of late endosomes, to lysosomes.',
+    'Without the tag, most hydrolases follow the default secretory pathway and leave the cell, which explains the <b>high plasma enzyme levels</b>. Lysosomes, deficient in many of their enzymes, fill with undigested material and appear as the <b>inclusions</b> that give the disease its name.',
   ],
   whyNot: {
     B: 'Failed entry into the rough ER would block secretory and membrane proteins broadly; hydrolases could not be secreted at high levels.',
@@ -173,12 +182,12 @@ export const QUESTION = {
     D: 'COPI-mediated retrograde transport returns escaped ER proteins; its loss does not specifically divert lysosomal enzymes out of the cell.',
     E: 'Impaired ubiquitin–proteasome tagging leads to accumulation of misfolded cytosolic proteins, not loss of lysosomal enzyme targeting.',
   },
-  objective: 'Lysosomal enzymes need a mannose-6-phosphate tag, added in the cis-Golgi, to be routed to lysosomes. Without it (I-cell disease), they are secreted into the blood and lysosomes fill with undigested substrates.',
+  objective: 'Most lysosomal enzymes need a mannose-6-phosphate tag, added in the cis-Golgi, to be routed to lysosomes. Without it (I-cell disease), they are secreted into the blood, and lysosomes fill with undigested substrates.',
 };
 
 export const SPOT_IT = [
   {
-    prompt: 'Click the site of ribosomal RNA synthesis.',
+    prompt: 'Click where most ribosomal RNA is synthesized.',
     answer: 'nucleolus',
     feedback: 'RNA polymerase I in the nucleolus transcribes most rRNA, and ribosomal subunits are assembled here.',
   },
@@ -200,10 +209,10 @@ export const SPOT_IT = [
   {
     prompt: 'Click where mannose-6-phosphate is added to lysosomal enzymes.',
     answer: 'golgi',
-    feedback: 'The tag is added in the cis-Golgi; the trans-Golgi then sorts tagged enzymes to lysosomes.',
+    feedback: 'The tag is added in the cis-Golgi; the trans-Golgi then sorts tagged enzymes toward lysosomes.',
   },
   {
-    prompt: 'Cyanide poisoning stops ATP production by inhibiting complex IV. Click where complex IV sits.',
+    prompt: 'Cyanide poisoning halts oxidative phosphorylation by inhibiting complex IV. Click where complex IV sits.',
     answer: 'mitochondrion',
     feedback: 'Complex IV (cytochrome c oxidase) is part of the electron transport chain on the inner mitochondrial membrane.',
   },

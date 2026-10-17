@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildCell, PALETTE } from './cell.js?v=7';
-import { createPipeline } from './render.js?v=7';
-import { Pathway } from './pathway.js?v=7';
-import { ORGANELLES, QUESTION, SPOT_IT } from './content.js?v=7';
+import { buildCell, PALETTE } from './cell.js?v=8';
+import { createPipeline } from './render.js?v=8';
+import { Pathway } from './pathway.js?v=8';
+import { ORGANELLES, QUESTION, SPOT_IT } from './content.js?v=8';
 
 const $ = (id) => document.getElementById(id);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -140,7 +140,7 @@ function makeLabel(text, cls = '') {
   return el;
 }
 // Larger, more central structures win when labels collide.
-const LABEL_PRIORITY = ['nucleus', 'golgi', 'mitochondrion', 'rer', 'nucleolus', 'lysosome', 'ser', 'membrane',
+const LABEL_PRIORITY = ['nucleus', 'golgi', 'mitochondrion', 'rer', 'nucleolus', 'lysosome', 'endosome', 'ser', 'membrane',
   'centrosome', 'peroxisome', 'microvilli', 'vesicle', 'ribosome', 'microtubule', 'intermediate', 'actin'];
 for (const k of LABEL_PRIORITY) {
   const o = cell.organelles[k];
@@ -336,11 +336,11 @@ function onCellClick(k) {
 
 // ---------------------------------------------------------------- explore
 const LIST_ORDER = ['membrane', 'microvilli', 'nucleus', 'nucleolus', 'rer', 'ribosome', 'ser', 'golgi', 'vesicle',
-  'mitochondrion', 'lysosome', 'peroxisome', 'centrosome', 'microtubule', 'actin', 'intermediate'];
+  'mitochondrion', 'endosome', 'lysosome', 'peroxisome', 'centrosome', 'microtubule', 'actin', 'intermediate'];
 const SWATCH = {
   membrane: PALETTE.membraneCut, microvilli: PALETTE.membrane, nucleus: PALETTE.nucleus, nucleolus: PALETTE.nucleolus,
   rer: PALETTE.rer, ribosome: PALETTE.ribosome, ser: PALETTE.ser, golgi: PALETTE.golgiTrans, vesicle: PALETTE.vesicle,
-  mitochondrion: PALETTE.mito, lysosome: PALETTE.lysosome, peroxisome: PALETTE.peroxisome, centrosome: PALETTE.centriole,
+  mitochondrion: PALETTE.mito, endosome: PALETTE.endosome, lysosome: PALETTE.lysosome, peroxisome: PALETTE.peroxisome, centrosome: PALETTE.centriole,
   microtubule: PALETTE.microtubule, actin: PALETTE.actin, intermediate: PALETTE.intermediate,
 };
 const listEl = $('organelleList');
@@ -505,6 +505,7 @@ function showSpot() {
   fb.hidden = true;
   $('spotNext').hidden = true;
   $('spotInstr').hidden = false;
+  $('spotAlt').hidden = spotIndex >= SPOT_IT.length;
   if (spotIndex >= SPOT_IT.length) {
     $('spotMeta').textContent = 'Done';
     $('spotPrompt').innerHTML = `<span class="score">${spotScore} / ${SPOT_IT.length}</span>right on the first click.`;
@@ -516,6 +517,12 @@ function showSpot() {
   $('spotMeta').textContent = `Prompt ${spotIndex + 1} of ${SPOT_IT.length}`;
   $('spotPrompt').textContent = SPOT_IT[spotIndex].prompt;
   $('spotNext').textContent = spotIndex === SPOT_IT.length - 1 ? 'See score' : 'Next prompt';
+}
+// Keyboard and screen-reader alternative to clicking in the 3D view.
+{
+  const grid = $('spotList');
+  grid.innerHTML = LIST_ORDER.map((k) => `<button type="button" data-k="${k}"><span class="swatch" style="background:#${SWATCH[k].toString(16).padStart(6, '0')}"></span>${ORGANELLES[k].name}</button>`).join('');
+  grid.addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) answerSpot(b.dataset.k); });
 }
 function answerSpot(k) {
   if (spotSolved || spotIndex >= SPOT_IT.length) return;

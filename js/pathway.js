@@ -42,10 +42,16 @@ export class Pathway {
       P.golgi.clone().addScaledVector(up, 0.68).addScaledVector(P.golgiAxis, 0.2),
       transOut,
     ]);
-    const lysoEdge = P.lysosome.clone().add(transOut.clone().sub(P.lysosome).setLength(0.05));
-    this.curveToLyso = new THREE.CatmullRomCurve3([
+    // trans-Golgi -> late endosome -> lysosome
+    this.curveToEndo = new THREE.CatmullRomCurve3([
       transOut,
-      transOut.clone().lerp(lysoEdge, 0.5).addScaledVector(up, 0.15),
+      transOut.clone().lerp(P.endosome, 0.5).addScaledVector(up, 0.22),
+      P.endosome.clone(),
+    ]);
+    const lysoEdge = P.lysosome.clone().add(P.endosome.clone().sub(P.lysosome).setLength(0.05));
+    this.curveToLyso = new THREE.CatmullRomCurve3([
+      P.endosome.clone(),
+      P.endosome.clone().lerp(lysoEdge, 0.5).addScaledVector(up, 0.12),
       lysoEdge,
     ]);
     this.curveToMembrane = new THREE.CatmullRomCurve3([
@@ -147,7 +153,7 @@ export class Pathway {
     const tagStep = this.mode === 'normal'
       ? {
         title: 'Tagged with mannose-6-phosphate',
-        body: 'GlcNAc-1-phosphotransferase adds a phosphate to mannose residues on each enzyme. A second enzyme trims off the leftover sugar, exposing the mannose-6-phosphate (M6P) tag.',
+        body: 'GlcNAc-1-phosphotransferase transfers GlcNAc-1-phosphate onto mannose residues of each enzyme’s N-linked sugars. A second, “uncovering” enzyme then removes the GlcNAc, exposing the mannose-6-phosphate (M6P) tag.',
         focus: () => ({ target: P.golgiCis, offset: view(7) }),
         dur: 3,
         anim: (t, S) => { S.tag = ease(seg(t, 0.2, 0.75)); S.pulse = t; S.label = ['tag', 'M6P tag added', S.pos.clone().addScaledVector(v3(0, 1, 0), 0.3), 'tag']; },
@@ -162,7 +168,7 @@ export class Pathway {
     const sortStep = {
       title: 'Sorted in the trans-Golgi',
       body: this.mode === 'normal'
-        ? 'M6P receptors in the trans-Golgi bind the tag and package the enzymes into clathrin-coated vesicles bound for lysosomes.'
+        ? 'M6P receptors in the trans-Golgi bind the tag and package the enzymes into clathrin-coated vesicles bound for endosomes.'
         : 'With no M6P to bind, the receptors in the trans-Golgi let the enzymes pass. They drop into the default secretory pathway.',
       focus: () => ({ target: P.golgi, offset: view(7.2) }),
       dur: 3.2,
@@ -170,13 +176,24 @@ export class Pathway {
     };
     const normalEnd = [
       {
+        title: 'Released in a late endosome',
+        body: 'The vesicle fuses with a late endosome. Its acidic interior releases the enzymes from the M6P receptors, which return to the Golgi for reuse.',
+        focus: () => ({ target: P.endosome.clone().lerp(P.golgiTrans, 0.4), offset: view(7.2) }),
+        dur: 3.4,
+        anim: (t, S) => {
+          S.pos.copy(this.curveToEndo.getPoint(ease(seg(t, 0, 0.6))));
+          S.ves = 1 - ease(seg(t, 0.58, 0.78));
+          S.label = ['endo', 'Late endosome', P.endosome.clone().addScaledVector(v3(0, 1, 0), 0.42), 'path'];
+        },
+      },
+      {
         title: 'Delivered to the lysosome',
-        body: 'The vesicle fuses with a lysosome. In its acidic interior the enzymes are released from their receptors and start digesting stored material.',
-        focus: () => ({ target: P.lysosome.clone().lerp(P.golgiTrans, 0.35), offset: view(7.6) }),
+        body: 'The late endosome delivers its contents to a lysosome by fusing with it. There the enzymes begin digesting stored material.',
+        focus: () => ({ target: P.lysosome.clone().lerp(P.endosome, 0.5), offset: view(7.2) }),
         dur: 3.6,
         anim: (t, S) => {
-          S.pos.copy(this.curveToLyso.getPoint(ease(seg(t, 0, 0.6))));
-          S.ves = 1 - ease(seg(t, 0.55, 0.75));
+          S.pos.copy(this.curveToLyso.getPoint(ease(seg(t, 0.05, 0.6))));
+          S.ves = ease(seg(t, 0, 0.12)) * (1 - ease(seg(t, 0.55, 0.75)));
           S.enz = 1 - ease(seg(t, 0.62, 0.8));
           S.glow = Math.sin(seg(t, 0.55, 1) * Math.PI);
           S.digest = ease(seg(t, 0.65, 1));
@@ -202,7 +219,7 @@ export class Pathway {
       },
       {
         title: 'Lysosomes fill with debris',
-        body: 'Lacking their hydrolases, lysosomes cannot break down glycosaminoglycans and lipids. They swell into the inclusions seen in the fibroblasts, the “I” in I-cell.',
+        body: 'Lacking many of their hydrolases, lysosomes cannot fully break down glycosaminoglycans and lipids. Undigested material builds up into the inclusions seen in the fibroblasts, the “I” in I-cell.',
         focus: () => ({ target: v3(0.6, -0.1, 0.4), offset: view(11.5) }),
         dur: 3.6,
         anim: (t, S) => {

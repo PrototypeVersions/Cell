@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=8">
   <script type="importmap">
     { "imports": {
         "three": "./vendor/three/build/three.module.min.js",
@@ -65,6 +65,7 @@
         <div id="exploreIntro" class="intro">
           <h2>Every structure is clickable</h2>
           <p>This cell is built entirely in code, so each organelle is a real object, not part of a flat picture. Select one in the model or from the list to see what it does and what exams ask about it.</p>
+          <p class="schematic">The model is a schematic animal cell: shapes, sizes, and colors are illustrative. The microvilli on top belong to absorptive cells, such as those lining the intestine, not to every cell.</p>
         </div>
         <h3 class="listhead">Structures</h3>
         <ul class="organelle-list" id="organelleList"></ul>
@@ -116,6 +117,10 @@
         <p class="item-meta" id="spotMeta"></p>
         <p class="spot-prompt" id="spotPrompt"></p>
         <p class="spot-instr" id="spotInstr">Click the structure in the cell. Zoom in if you need to.</p>
+        <details class="spot-alt" id="spotAlt">
+          <summary>Or choose from a list</summary>
+          <div class="spot-list" id="spotList"></div>
+        </details>
         <div class="spot-feedback" id="spotFeedback" hidden></div>
         <button type="button" class="primary" id="spotNext" hidden>Next prompt</button>
       </section>
@@ -125,6 +130,6 @@
       </footer>
     </aside>
   </main>
-  <script type="module" src="js/main.js?v=7"></script>
+  <script type="module" src="js/main.js?v=8"></script>
 </body>
 </html>

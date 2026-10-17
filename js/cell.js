@@ -234,6 +234,8 @@ export const PALETTE = {
   mito: 0xdf7a76,
   mitoInner: 0xf3b3aa,
   lysosome: 0x3c9a88,
+  endosome: 0x7fb5aa,
+  endoInner: 0x2f7d70,
   lysoContent: 0x1f6d5f,
   debris: 0x8a8070,
   peroxisome: 0x88b05a,
@@ -601,19 +603,40 @@ export function buildCell({ lowPower = false } = {}) {
     register('lysosome', lysoGroup, spots[1].clone().add(v3(0, 0.35, 0)));
   }
 
-  // ---------------- peroxisomes: small sacs with a crystalline core
+  // ---------------- late endosome: where M6P receptors release lysosomal enzymes
+  const ENDOSOME = v3(2.66, 0.12, 0.97);
+  {
+    const grp = new THREE.Group();
+    const shell = new THREE.Mesh(
+      deformedSphere(ENDOSOME, (d) => 0.21 * (1 + 0.07 * Math.sin(4 * d.x + 1) * Math.cos(3 * d.y)), 40, 30),
+      material(PALETTE.endosome, { transparent: true, opacity: 0.74, roughness: 0.25, clearcoat: 0.9, depthWrite: false }),
+    );
+    shell.renderOrder = 5;
+    // internal vesicles give the multivesicular look of a late endosome
+    const inner = new THREE.InstancedMesh(new THREE.SphereGeometry(0.034, 12, 10), material(PALETTE.endoInner, { roughness: 0.4 }), 8);
+    const m = new THREE.Matrix4();
+    for (let k = 0; k < 8; k++) {
+      const d = randomUnit(r).multiplyScalar(0.12 * Math.cbrt(r()));
+      m.makeTranslation(ENDOSOME.x + d.x, ENDOSOME.y + d.y, ENDOSOME.z + d.z); inner.setMatrixAt(k, m);
+    }
+    grp.add(inner, shell);
+    register('endosome', grp, ENDOSOME.clone().add(v3(0, 0.3, 0)));
+  }
+
+  // ---------------- peroxisomes: small single-membrane sacs
   {
     const spots = [v3(1.05, 0.25, 2.35), v3(2.05, 0.85, 0.35), v3(-0.35, -1.35, 1.95), v3(1.45, -1.45, -0.35), v3(-2.2, -0.2, 0.2)];
     const grp = new THREE.Group();
     const shellMat = material(PALETTE.peroxisome, { transparent: true, opacity: 0.6, roughness: 0.3, clearcoat: 0.8, depthWrite: false });
-    const coreMat = material(PALETTE.peroxCore, { roughness: 0.4, flatShading: true });
     spots.forEach((p) => {
       const rad = 0.17 + r() * 0.04;
       const s = new THREE.Mesh(new THREE.SphereGeometry(rad, 28, 20), shellMat);
       s.position.copy(p); s.renderOrder = 5;
-      const core = new THREE.Mesh(new THREE.OctahedronGeometry(rad * 0.45, 0), coreMat);
-      core.position.copy(p); core.rotation.set(r() * 3, r() * 3, r() * 3);
-      grp.add(core, s);
+      // Human peroxisomes lack the crystalline urate-oxidase core seen in rodent textbook images,
+      // so the matrix is shown as a soft, uniform interior.
+      const matrix = new THREE.Mesh(new THREE.SphereGeometry(rad * 0.82, 24, 16), material(PALETTE.peroxCore, { roughness: 0.6, transparent: true, opacity: 0.35, depthWrite: false }));
+      matrix.position.copy(p); matrix.renderOrder = 4;
+      grp.add(matrix, s);
     });
     register('peroxisome', grp, spots[0].clone().add(v3(0, 0.3, 0)));
   }
@@ -775,7 +798,7 @@ export function buildCell({ lowPower = false } = {}) {
     setCutaway(alpha) { cellWedge.set(alpha); rebuildMembraneCut(); },
     points: {
       rerExit, golgiCis, golgiTrans, golgi: GOLGI, golgiAxis, golgiSide,
-      lysosome: LYSO_TARGET, exitDir, exitPoint, nucleus: NUC_CENTER, centrosome: CENTROSOME,
+      lysosome: LYSO_TARGET, endosome: ENDOSOME, exitDir, exitPoint, nucleus: NUC_CENTER, centrosome: CENTROSOME,
     },
   };
 }
