@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildCell, PALETTE } from './cell.js?v=5';
-import { createPipeline } from './render.js?v=5';
-import { Pathway } from './pathway.js?v=5';
-import { ORGANELLES, QUESTION, SPOT_IT } from './content.js?v=5';
+import { buildCell, PALETTE } from './cell.js?v=6';
+import { createPipeline } from './render.js?v=6';
+import { Pathway } from './pathway.js?v=6';
+import { ORGANELLES, QUESTION, SPOT_IT } from './content.js?v=6';
 
 const $ = (id) => document.getElementById(id);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -139,11 +139,15 @@ function makeLabel(text, cls = '') {
   labelLayer.appendChild(el);
   return el;
 }
-for (const [k, o] of Object.entries(cell.organelles)) {
-  if (!o.anchor || !ORGANELLES[k]) continue;
-  const el = makeLabel(ORGANELLES[k].name);
+// Larger, more central structures win when labels collide.
+const LABEL_PRIORITY = ['nucleus', 'golgi', 'mitochondrion', 'rer', 'nucleolus', 'lysosome', 'ser', 'membrane',
+  'centrosome', 'peroxisome', 'microvilli', 'vesicle', 'ribosome', 'microtubule', 'intermediate', 'actin'];
+for (const k of LABEL_PRIORITY) {
+  const o = cell.organelles[k];
+  if (!o || !o.anchor || !ORGANELLES[k]) continue;
+  const el = makeLabel(ORGANELLES[k].short || ORGANELLES[k].name);
   el.classList.add('hidden');
-  allLabels.push({ key: k, el, pos: o.anchor });
+  allLabels.push({ key: k, el, pos: o.anchor, w: 0 });
 }
 const pathLabel = { el: makeLabel('', 'path hidden'), pos: new THREE.Vector3(), on: false };
 
@@ -160,17 +164,25 @@ const labels = {
 
 function placeLabel(el, pos) {
   tmpV.copy(pos).project(camera);
-  if (tmpV.z > 1) { el.style.visibility = 'hidden'; return; }
+  if (tmpV.z > 1) { el.style.visibility = 'hidden'; return null; }
   el.style.visibility = 'visible';
   const x = (tmpV.x * 0.5 + 0.5) * stage.clientWidth;
   const y = (-tmpV.y * 0.5 + 0.5) * stage.clientHeight - 10;
   el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
+  return { x, y };
 }
 function updateLabels() {
+  const show = labelsOn && !pathway.active;
+  const placed = [];
   for (const l of allLabels) {
-    const show = labelsOn && !pathway.active;
-    l.el.classList.toggle('hidden', !show);
-    if (show) placeLabel(l.el, l.pos);
+    if (!show) { l.el.classList.add('hidden'); continue; }
+    const p = placeLabel(l.el, l.pos);
+    if (!l.w) l.w = l.el.offsetWidth || 90;
+    // Greedy declutter: skip a label that would overlap one already shown.
+    const box = p && { l: p.x - l.w / 2 - 4, r: p.x + l.w / 2 + 4, t: p.y - 26, b: p.y + 2 };
+    const clash = !box || placed.some((q) => box.l < q.r && box.r > q.l && box.t < q.b && box.b > q.t);
+    l.el.classList.toggle('hidden', clash);
+    if (!clash) placed.push(box);
   }
   if (pathLabel.on) placeLabel(pathLabel.el, pathLabel.pos);
 }

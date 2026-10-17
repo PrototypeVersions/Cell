@@ -2,6 +2,7 @@
 
 export const ORGANELLES = {
   membrane: {
+    short: 'Membrane',
     name: 'Plasma membrane',
     role: 'An asymmetric phospholipid bilayer with cholesterol, embedded proteins, and a sugar-coated outer surface (glycocalyx).',
     facts: [
@@ -35,6 +36,7 @@ export const ORGANELLES = {
     ],
   },
   rer: {
+    short: 'Rough ER',
     name: 'Rough endoplasmic reticulum',
     role: 'Ribosome-studded sheets that synthesize secretory, membrane, and lysosomal proteins and begin N-linked glycosylation.',
     facts: [
@@ -44,6 +46,7 @@ export const ORGANELLES = {
     ],
   },
   ribosome: {
+    short: 'Ribosomes',
     name: 'Free ribosomes',
     role: 'Translate proteins that stay in the cytosol or go to peroxisomes, the nucleus, or mitochondria (nuclear-encoded).',
     facts: [
@@ -52,6 +55,7 @@ export const ORGANELLES = {
     ],
   },
   ser: {
+    short: 'Smooth ER',
     name: 'Smooth endoplasmic reticulum',
     role: 'Ribosome-free tubules that make steroids and phospholipids and detoxify drugs with cytochrome P450 enzymes.',
     facts: [
@@ -61,6 +65,7 @@ export const ORGANELLES = {
     ],
   },
   golgi: {
+    short: 'Golgi',
     name: 'Golgi apparatus',
     role: 'Receives proteins from the ER at its cis face, modifies and sorts them, and ships them from its trans face.',
     facts: [
@@ -69,6 +74,7 @@ export const ORGANELLES = {
     ],
   },
   vesicle: {
+    short: 'Vesicles',
     name: 'Transport vesicles',
     role: 'Membrane bubbles that carry cargo between compartments.',
     facts: [
@@ -77,6 +83,7 @@ export const ORGANELLES = {
     ],
   },
   mitochondrion: {
+    short: 'Mitochondrion',
     name: 'Mitochondria',
     role: 'Run the TCA cycle, fatty acid β-oxidation, and oxidative phosphorylation on the folded inner membrane (cristae).',
     facts: [
@@ -86,6 +93,7 @@ export const ORGANELLES = {
     ],
   },
   lysosome: {
+    short: 'Lysosome',
     name: 'Lysosomes',
     role: 'Acidic sacs of hydrolases that break down macromolecules, worn-out organelles (autophagy), and engulfed material.',
     facts: [
@@ -94,6 +102,7 @@ export const ORGANELLES = {
     ],
   },
   peroxisome: {
+    short: 'Peroxisome',
     name: 'Peroxisomes',
     role: 'Oxidize very-long-chain and branched-chain fatty acids, make plasmalogens, and break down hydrogen peroxide with catalase.',
     facts: [
@@ -120,6 +129,7 @@ export const ORGANELLES = {
     ],
   },
   actin: {
+    short: 'Actin',
     name: 'Actin microfilaments',
     role: 'Thin filaments that shape the cell cortex and drive cell movement, cytokinesis, and muscle contraction.',
     facts: [
@@ -128,6 +138,7 @@ export const ORGANELLES = {
     ],
   },
   intermediate: {
+    short: 'Intermediate filaments',
     name: 'Intermediate filaments',
     role: 'Rope-like filaments that give the cell mechanical strength; their type depends on the tissue.',
     facts: [
