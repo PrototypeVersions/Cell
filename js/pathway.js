@@ -85,6 +85,24 @@ export class Pathway {
       new THREE.MeshBasicMaterial({ color: COLORS.fail, transparent: true, opacity: 0.9 }),
     );
     this.cargo.add(this.failRing);
+    // Soft halo so the cargo is easy to follow at any zoom.
+    {
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const g = c.getContext('2d');
+      const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      grd.addColorStop(0, 'rgba(255,214,120,0.85)');
+      grd.addColorStop(0.35, 'rgba(255,200,90,0.35)');
+      grd.addColorStop(1, 'rgba(255,200,90,0)');
+      g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      this.halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending }));
+      this.halo.scale.setScalar(0.75);
+      this.halo.renderOrder = 20;
+      this.cargo.add(this.halo);
+    }
+    this.cargo.scale.setScalar(1.45);
     scene.add(this.cargo);
 
     // The target lysosome gets its own material so it can glow on delivery.
@@ -219,6 +237,7 @@ export class Pathway {
       e.userData.tag.scale.setScalar(Math.max(0.001, S.tag * bump));
       e.userData.tag.visible = S.tag > 0.01;
     });
+    this.halo.material.opacity = Math.max(S.enz, S.ves) * (S.spread > 0 ? 0.5 : 0.9);
     this.failRing.visible = S.fail > 0.01;
     this.failRing.scale.setScalar(0.6 + S.fail * 0.6);
     this.failRing.material.opacity = S.fail;

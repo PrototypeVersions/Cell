@@ -206,7 +206,7 @@ a { color: var(--hema); text-underline-offset: 2px; }
 .seg button[aria-checked="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(28, 41, 56, .12); font-weight: 600; }
 .seg button[data-mode="disease"][aria-checked="true"] { color: var(--eosin); }
 
-.steps { list-style: none; margin: 14px 0 0; padding: 0; counter-reset: step; display: grid; gap: 1px; }
+.steps { list-style: none; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--rule); counter-reset: step; display: grid; gap: 1px; }
 .steps li { counter-increment: step; }
 .steps button {
   width: 100%; text-align: left; border: 0; background: none; cursor: pointer; padding: 6px 8px; border-radius: 6px;
@@ -219,7 +219,7 @@ a { color: var(--hema); text-underline-offset: 2px; }
 .player.disease .steps button.now { background: var(--eosin-soft); color: var(--eosin); }
 .player.disease .steps button.now::before { color: var(--eosin); }
 
-.caption { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--rule); min-height: 7.4em; }
+.caption { margin-top: 12px; min-height: 7.4em; }
 .cap-title { margin: 0 0 4px; font-weight: 600; }
 .cap-body { margin: 0; font-family: var(--serif); font-size: 16px; line-height: 1.6; color: var(--ink); }
 .transport { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
